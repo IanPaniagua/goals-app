@@ -24,7 +24,7 @@ const getCurrentUserId = () => {
 };
 
 // Goals operations
-export const createGoal = async (goalData: GoalFormData): Promise<string> => {
+export const createGoal = async (goalData: GoalFormData & { imageUrl?: string }): Promise<string> => {
   try {
     const userId = getCurrentUserId();
     const docRef = await addDoc(collection(db, 'goals'), {
@@ -37,7 +37,7 @@ export const createGoal = async (goalData: GoalFormData): Promise<string> => {
       actualCompletionDate: null,
       expectedAmount: goalData.expectedAmount || null,
       actualAmount: null,
-      imageUrl: null,
+      imageUrl: goalData.imageUrl || null,
       completed: false,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),

@@ -10,29 +10,27 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       redirect('/auth');
       return;
     }
 
-    const loadGoals = async () => {
-      try {
-        const userGoals = await getGoals();
-        setGoals(userGoals);
-      } catch (error) {
-        console.error('Error loading goals:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadGoals();
-  }, [user]);
+    if (user) {
+      const loadGoals = async () => {
+        try {
+          const userGoals = await getGoals();
+          setGoals(userGoals);
+        } catch (error) {
+          console.error('Error loading goals:', error);
+        }
+      };
+      loadGoals();
+    }
+  }, [user, authLoading]);
 
   const handleDeleteGoal = async (goalId: string) => {
     try {
@@ -43,16 +41,16 @@ export default function Dashboard() {
     }
   };
 
-  if (!user) {
-    return null;
-  }
-
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-xl text-gray-600">Cargando...</div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
@@ -99,7 +97,7 @@ export default function Dashboard() {
                 <div className="text-2xl mb-2">{area.icon}</div>
                 <div className="font-semibold">{area.displayName}</div>
                 <div className="text-sm opacity-90">
-                  {goals.filter(goal => goal.area === area.id).length} metas
+                  {goals.filter(goal => goal.area.includes(area.id)).length} metas
                 </div>
               </Link>
             ))}
@@ -127,16 +125,25 @@ export default function Dashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {goals.map((goal) => {
-              const area = AREAS.find(a => a.id === goal.area);
+              const goalAreas = AREAS.filter(a => goal.area.includes(a.id));
               return (
-                <div key={goal.id} className="bg-white rounded-lg shadow-md p-6 border-l-4" style={{borderLeftColor: area?.color.replace('bg-', '#')}}>
-                  <div className="flex items-center gap-2 mb-3">
-                    {area && (
-                      <span className={`${area.color} text-white px-2 py-1 rounded text-sm flex items-center gap-1`}>
+                <div key={goal.id} className="bg-white rounded-lg shadow-md p-6 border-l-4" style={{borderLeftColor: goalAreas[0]?.color.replace('bg-', '#')}}>
+                  {goal.imageUrl && (
+                    <div className="mb-4 flex justify-center">
+                      <img
+                        src={goal.imageUrl}
+                        alt="Imagen de la meta"
+                        className="h-32 w-auto rounded-lg object-cover border"
+                      />
+                    </div>
+                  )}
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    {goalAreas.map(area => (
+                      <span key={area.id} className={`${area.color} text-white px-2 py-1 rounded text-sm flex items-center gap-1`}>
                         <span>{area.icon}</span>
                         {area.displayName}
                       </span>
-                    )}
+                    ))}
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{goal.title}</h3>
                   <p className="text-gray-600 mb-4">{goal.description}</p>

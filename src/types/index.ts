@@ -2,7 +2,7 @@ export interface Goal {
   id: string;
   title: string;
   description: string;
-  area: Area;
+  area: Area[];
   startDate: Date;
   expectedCompletionDate: Date;
   actualCompletionDate?: Date;
@@ -15,12 +15,12 @@ export interface Goal {
   updatedAt: Date;
 }
 
-export type Area = 'riqueza' | 'salud' | 'relaciones' | 'alma';
+export type Area = 'riqueza' | 'salud' | 'relaciones' | 'alma' | 'personal';
 
 export interface GoalFormData {
   title: string;
   description: string;
-  area: Area;
+  area: Area[];
   startDate: string;
   expectedCompletionDate: string;
   expectedAmount?: number;
